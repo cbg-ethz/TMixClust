@@ -1,0 +1,32 @@
+Package: TMixClust
+Type: Package
+Title: Time Series Clustering of Gene Expression with Gaussian Mixed-Effects Models and Smoothing Splines
+Version: 0.99.0
+Year: 2017
+Date: 2017-06-04
+Author: Monica Golumbeanu <monica.golumbeanu@bsse.ethz.ch>
+Maintainer: Monica Golumbeanu <monica.golumbeanu@bsse.ethz.ch>
+Description: Implementation of a clustering method for time series gene expression data based 
+             on mixed-effects models with Gaussian variables and non-parametric cubic splines estimation. 
+             The method can robustly account for the high levels of noise present in typical gene expression time series datasets.
+License: GPL (>=2)
+Depends: R (>= 3.4)
+biocViews: Software, StatisticalMethod, Clustering, TimeCourse, GeneExpression
+Imports: 
+    gss,
+    mvtnorm,
+    stats,
+    zoo,
+    cluster,
+    utils,
+    doParallel,
+    foreach,
+    flexclust,
+    grDevices,
+    graphics,
+    BiocStyle
+Suggests: rmarkdown,knitr
+VignetteBuilder: knitr
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1
