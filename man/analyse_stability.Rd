@@ -6,8 +6,8 @@
 selection}
 \usage{
 analyse_stability(time_series_df, time_points = c(1:ncol(time_series_df)),
-  nb_clusters = 2, em_iter_max = 1000, mc_em_iter_max = 100,
-  em_ll_convergence = 0.001, nb_clustering_runs = 3, nb_cores = 2)
+  nb_clusters = 2, em_iter_max = 1000, mc_em_iter_max = 10,
+  em_ll_convergence = 0.001, nb_clustering_runs = 3, nb_cores = 1)
 }
 \arguments{
 \item{time_series_df}{data frame containing the time series.
@@ -23,16 +23,16 @@ Default: \code{c(1:ncol(time_series_df))}.}
 expectation-maximization (EM) algorithm. Default: 1000.}
 
 \item{mc_em_iter_max}{maximum number of iterations for Monte-Carlo
-resampling. Default is 100.}
+resampling. Default is 10.}
 
 \item{em_ll_convergence}{convergence threshold for likelihood improvement.
 Default is 0.001.}
 
 \item{nb_clustering_runs}{number of times the clustering procedure is
-repeated on the input data. Default is 5.}
+repeated on the input data. Default is 3.}
 
 \item{nb_cores}{number of cores to be used to run the separate clustering
-operations in parallel. Default is 2.}
+operations in parallel. Default is 1.}
 }
 \value{
 TMixClust object with the highest likelihood.

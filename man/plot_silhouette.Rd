@@ -2,7 +2,7 @@
 % Please edit documentation in R/external_TMixClust.R
 \name{plot_silhouette}
 \alias{plot_silhouette}
-\title{Generates a silhouette plot for e given clustering configuration.}
+\title{Generates a silhouette plot for a given clustering configuration.}
 \usage{
 plot_silhouette(TMixClust_object, sim_metric = "euclidean",
   sil_color = "#bdbdbd")

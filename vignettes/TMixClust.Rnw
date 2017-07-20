@@ -102,6 +102,20 @@ toy_data = get_time_series_df(toy_data_file)
 print(head(toy_data))
 @
 
+Finally, it is possible to load the time series data directly from a Biobase
+ExpressionSet object with function~\texttt{get\_time\_series\_df\_bio}. Here is
+ an example using the SOS data from the Bioconductor SPEM package:
+
+<<load-data-from-biobase, echo=TRUE, results='hide'>>=
+# Load the SOS pathway data from Bioconductor package SPEM
+library(SPEM)
+data(sos)
+sos_data = get_time_series_df_bio(sos)
+
+# Print the first lines of the retrieved time series data frame
+print(head(sos_data))
+@
+
 \subsection{Clustering}
 Once the time series data is loaded, we can perform clustering using the
 function \texttt{TMixClust}. The only required argument of this function

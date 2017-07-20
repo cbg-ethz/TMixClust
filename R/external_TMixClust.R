@@ -39,6 +39,48 @@ get_time_series_df = function(data_file) {
 }
 
 ##############################
+#' @title Extracts a time series data frame from a Bioconductor Biobase
+#' ExpressionSet object.
+#'
+#' @description \code{get_time_series_df_bio} creates a data frame with time
+#' series data from a Bioconductor Biobase ExpressionSet object.
+#' @param bio_obj Bioconductor Biobase ExpressionSet object. The assayData has
+#' to contain a matrix where each row is a gene time series and each column
+#' contains the time series values at each time point. The number of columns is
+#' equal to the number of time points, while the number of rows is equal to the
+#' number of genes.
+#'
+#' @return A data frame containing the time series
+#'
+#' @author Monica Golumbeanu, \email{monica.golumbeanu@bsse.ethz.ch}
+#' @references Golumbeanu M, Desfarges S, Hernandez C, Quadroni M, Rato S,
+#' Mohammadi P, Telenti A, Beerenwinkel N, Ciuffi A. (2017) Dynamics of
+#' Proteo-Transcriptomic Response to HIV-1 Infection.
+#'
+#' @import SPEM
+#' @import Biobase
+#'
+#' @examples
+#' # Load the SOS pathway data from Bioconductor package SPEM
+#' library(SPEM)
+#' data(sos)
+#' sos_data = get_time_series_df_bio(sos)
+#'
+#' # Print the first lines of the retrieved time series data frame
+#' print(head(sos_data))
+#'
+#' @export
+#'
+get_time_series_df_bio = function(bio_obj) {
+    if (missing(bio_obj))
+        stop("A Biobase ExpressionSet object needs to be specified.")
+
+    data_table = as.data.frame(assayDataElement(assayData(bio_obj), 'exprs'))
+    return(data_table)
+}
+
+
+##############################
 #' @title Plots all the time series stored in a data frame object
 #'
 #' @description \code{plot_time_series_df} allows the user to visualise the time
@@ -152,7 +194,7 @@ TMixClust = function(time_series_df, time_points = c(1:ncol(time_series_df)),
     # input checking conditions
     if (missing(time_series_df))
         stop("A data frame containing time series needs to be provided.")
-    if(!length(time_points)==ncol(time_series_df))
+    if(!(length(time_points)==ncol(time_series_df)))
         stop("The provided time series vector has different length than the
                 number of columns in the time series data frame.")
     if(!(nb_clusters==round(nb_clusters) && nb_clusters > 1))
@@ -360,7 +402,7 @@ generate_TMixClust_report = function(TMixClust_object, report_folder=paste(
 }
 
 #############################
-#' @title Generates a silhouette plot for e given clustering configuration.
+#' @title Generates a silhouette plot for a given clustering configuration.
 #'
 #' @description \code{plot_silhouette}
 #'
@@ -453,13 +495,13 @@ plot_silhouette = function(TMixClust_object, sim_metric="euclidean",
 #' @param em_iter_max maximum number of iterations for the
 #' expectation-maximization (EM) algorithm. Default: 1000.
 #' @param mc_em_iter_max maximum number of iterations for Monte-Carlo
-#' resampling. Default is 100.
+#' resampling. Default is 10.
 #' @param em_ll_convergence convergence threshold for likelihood improvement.
 #' Default is 0.001.
 #' @param nb_clustering_runs number of times the clustering procedure is
 #' repeated on the input data. Default is 3.
 #' @param nb_cores number of cores to be used to run the separate clustering
-#' operations in parallel. Default is 2.
+#' operations in parallel. Default is 1.
 #'
 #' @return TMixClust object with the highest likelihood.
 #' Renders a plot showing the overall distribution of the Rand index, which
@@ -485,8 +527,7 @@ plot_silhouette = function(TMixClust_object, sim_metric="euclidean",
 #' Mohammadi P, Telenti A, Beerenwinkel N, Ciuffi A. (2017) Dynamics of
 #' Proteo-Transcriptomic Response to HIV-1 Infection.
 #'
-#' @import doParallel
-#' @import foreach
+#' @import BiocParallel
 #' @importFrom flexclust randIndex
 #' @importFrom grDevices adjustcolor col2rgb dev.off pdf
 #' @importFrom graphics abline axis par plot title hist
@@ -494,43 +535,42 @@ plot_silhouette = function(TMixClust_object, sim_metric="euclidean",
 #' @export
 #'
 analyse_stability = function(time_series_df,
-                                time_points = c(1:ncol(time_series_df)),
-                                nb_clusters = 2, em_iter_max = 1000,
-                                mc_em_iter_max = 100, em_ll_convergence = 0.001,
-                                nb_clustering_runs=3, nb_cores=2){
+                             time_points = c(1:ncol(time_series_df)),
+                             nb_clusters = 2, em_iter_max = 1000,
+                             mc_em_iter_max = 10, em_ll_convergence = 0.001,
+                             nb_clustering_runs=3, nb_cores=1){
     # input checking conditions
     if (missing(time_series_df))
         stop("A data frame containing time series needs to be provided.")
     if(!length(time_points)==ncol(time_series_df))
         stop("The provided time series vector has different length than
-                the number of columns in the time series data frame.")
+             the number of columns in the time series data frame.")
     if(!(nb_clusters==round(nb_clusters) && nb_clusters > 1))
         stop("The number of clusters has to be a positive integer larger
-                than 1.")
+             than 1.")
     if(!(em_iter_max==round(em_iter_max) && em_iter_max > 1))
         stop("The number of iterations for EM algorithm has to be a
-                positive integer larger than 1.")
+             positive integer larger than 1.")
     if(!(mc_em_iter_max==round(mc_em_iter_max) && mc_em_iter_max > 1))
         stop("The number of iterations for the MC EM has to be a positive
-                integer larger than 1.")
+             integer larger than 1.")
     if(em_ll_convergence < 0)
         stop("The convergence threshold for the likelihood convergence has to
-                be positive.")
+             be positive.")
     if(!(nb_clustering_runs==round(nb_clustering_runs) &&
-        nb_clustering_runs >= 1))
+         nb_clustering_runs >= 1))
         stop("The number of clustering runs has to be a positive integer
-                strictly larger than 0.")
+             strictly larger than 0.")
     if(!(nb_cores==round(nb_cores) && nb_cores >= 1))
         stop("The number of computing cores has to be a positive integer
-                strictly larger than 0.")
+             strictly larger than 0.")
 
-    # set up the parallel environment
-    registerDoParallel(cores=nb_cores)
-    # perform each TMixClust clustering in parallel and store all the
-    # TMixClust objects in a list
-    cl_obj = foreach(i=1:nb_clustering_runs) %dopar%
-            TMixClust(time_series_df, time_points, nb_clusters,
-                        em_iter_max, mc_em_iter_max, em_ll_convergence)
+    TMixClust_wrapper = function(n){
+        TMixClust(time_series_df, time_points, nb_clusters,em_iter_max,
+                    mc_em_iter_max, em_ll_convergence)
+    }
+    cl_obj = bplapply(1:nb_clustering_runs, TMixClust_wrapper,
+                        BPPARAM = MulticoreParam(workers = nb_cores))
 
     # find the solution with the highest likelihood
     max_pos = which.max(lapply(cl_obj, function(x) x$em_ll[length(x$em_ll)] ))
@@ -548,8 +588,8 @@ analyse_stability = function(time_series_df,
 
     # plot the distribution of the obtained Rand indexes
     hist(rand_ind, xlab = "rand index",
-            main = "Distribution of agreement probability",
-            col = "#2c7fb8", breaks = 10)
+         main = "Distribution of agreement probability",
+         col = "#2c7fb8", breaks = 10)
 
     return(best_clust_obj)
 }
