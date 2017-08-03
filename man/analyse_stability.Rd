@@ -5,7 +5,7 @@
 \title{Stability analysis, clustering evaluation and optimal solution
 selection}
 \usage{
-analyse_stability(time_series_df, time_points = c(1:ncol(time_series_df)),
+analyse_stability(time_series_df, time_points = seq_len(ncol(time_series_df)),
   nb_clusters = 2, em_iter_max = 1000, mc_em_iter_max = 10,
   em_ll_convergence = 0.001, nb_clustering_runs = 3, nb_cores = 1)
 }
@@ -15,7 +15,7 @@ Each row is a time series comprised of the time series name which is also
 the row name, and the time series values at each time point.}
 
 \item{time_points}{vector containing numeric values for the time points.
-Default: \code{c(1:ncol(time_series_df))}.}
+Default: \code{seq_len(ncol(time_series_df))}.}
 
 \item{nb_clusters}{desired number of clusters}
 
@@ -56,7 +56,7 @@ best_clust_obj = analyse_stability(toy_data_df, nb_clusters = 3,
                                    nb_clustering_runs = 4, nb_cores = 1)
 
 # Plot the time series from each cluster
-for (i in 1:3) {
+for (i in seq_len(3)) {
     # Extract the time series in the current cluster and plot them
     c_df=toy_data_df[which(best_clust_obj$em_cluster_assignment==i),]
     plot_time_series_df(c_df, plot_title = paste("cluster",i))

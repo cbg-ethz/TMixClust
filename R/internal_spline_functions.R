@@ -7,21 +7,16 @@
 # Output: z - the constructed matrix
 ####################
 create_z = function(data_table) {
-    nb_numeric = apply(data_table, MARGIN = 1, function(x) sum(1-is.na(c(x))))
+    nb_numeric <- rowSums(1-is.na(data_table))
     nb_elements = sum(nb_numeric)
-    previous = 0
-    z = c(rep(1,nb_numeric[1]), rep(0,nb_elements-nb_numeric[1]))
-    if(nrow(data_table)>1) {
-        for (i in 2:nrow(data_table)) {
-            previous = previous + nb_numeric[i-1]
-            column = c(rep(0,previous), rep(1,nb_numeric[i]),
-                        rep(0,nb_elements-previous-nb_numeric[i]))
-            z = cbind(z,column)
-        }
+    z = matrix(0, nb_elements, nrow(data_table))
+    previous = head(c(0, cumsum(nb_numeric)), -1)
+    for (i in seq_len(nrow(data_table))) {
+        z[ previous[i] + seq_len(nb_numeric[i]), i] = 1
     }
-    colnames(z) = NULL
     return(z)
 }
+
 
 #######################
 # Function fit_ssanova
@@ -56,7 +51,6 @@ fit_ssanova = function(data_to_fit, time_points, wei) {
     # fit the SSANOVA model with or without specified weights
     if(missing(wei)) {
         tryCatch({
-            #print("fitting without weights")
             # fit model
             fit_model = ssanova(data_vector[selected_numeric]~tm,
                                     random=random_effect,
@@ -67,16 +61,15 @@ fit_ssanova = function(data_to_fit, time_points, wei) {
                                 data.frame(tm = time_points,
                                         offset=rep(0,length(time_points))))
         }, warning = function(w) {
-            print(w)
+            message(w)
         }, error = function(e) {
-            print(e)
+            message(e)
             stop("There was a problem with fitting the SSANOVA model. Try
 running again or reduce the amount of missing values in the
 data if applicable.")
         })
     } else {
         tryCatch({
-            #print("fitting with weights")
             # specify the weights
             wei_vector = as.numeric(as.vector(wei))
             # fit the model
@@ -88,9 +81,9 @@ data if applicable.")
             est_mu = predict(fit_model, data.frame(tm = time_points,
                                             offset=rep(0,length(time_points))))
         }, warning = function(w) {
-            print(w)
+            message(w)
         }, error = function(e) {
-            print(e)
+            message(e)
             stop("There was an estimation problem with fitting the
 SSANOVA model. Try running again or reduce the amount of missing values in
 the data if applicable.")

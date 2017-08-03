@@ -4,7 +4,7 @@
 \alias{plot_time_series_df}
 \title{Plots all the time series stored in a data frame object}
 \usage{
-plot_time_series_df(ts_df, time_points = c(1:ncol(ts_df)),
+plot_time_series_df(ts_df, time_points = seq_len(ncol(ts_df)),
   data_color = "#fd8d3c", x_label = "time", y_label = "value",
   plot_title = "Time series plot")
 }
@@ -12,7 +12,7 @@ plot_time_series_df(ts_df, time_points = c(1:ncol(ts_df)),
 \item{ts_df}{data frame containing on each row a time-series}
 
 \item{time_points}{vector containing the values of the time points.
-Default: \code{c(1:ncol(time_series_df))}.}
+Default: \code{seq_len(ncol(time_series_df))}.}
 
 \item{data_color}{color of the time series to be used for the plot.
 Default is orange.}

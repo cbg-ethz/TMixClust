@@ -1,7 +1,7 @@
 Package: TMixClust
 Type: Package
 Title: Time Series Clustering of Gene Expression with Gaussian Mixed-Effects Models and Smoothing Splines
-Version: 0.99.2
+Version: 0.99.3
 Year: 2017
 Date: 2017-06-04
 Author: Monica Golumbeanu <monica.golumbeanu@bsse.ethz.ch>
@@ -23,10 +23,12 @@ Imports:
     flexclust,
     grDevices,
     graphics,
-    BiocStyle,
     Biobase,
     SPEM
-Suggests: rmarkdown,knitr
+Suggests: 
+    rmarkdown,
+    knitr,
+    BiocStyle
 VignetteBuilder: knitr
 Encoding: UTF-8
 LazyData: true

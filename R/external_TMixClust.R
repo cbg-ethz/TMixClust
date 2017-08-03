@@ -88,7 +88,7 @@ get_time_series_df_bio = function(bio_obj) {
 #'
 #' @param ts_df data frame containing on each row a time-series
 #' @param time_points vector containing the values of the time points.
-#' Default: \code{c(1:ncol(time_series_df))}.
+#' Default: \code{seq_len(ncol(time_series_df))}.
 #' @param data_color color of the time series to be used for the plot.
 #' Default is orange.
 #' @param x_label label of the x axis of the plot. Default is "time"
@@ -110,7 +110,7 @@ get_time_series_df_bio = function(bio_obj) {
 #' plot_time_series_df(toy_data_df)
 #' @export
 #'
-plot_time_series_df = function(ts_df, time_points = c(1:ncol(ts_df)),
+plot_time_series_df = function(ts_df, time_points = seq_len(ncol(ts_df)),
                             data_color="#fd8d3c", x_label="time",
                             y_label="value", plot_title="Time series plot") {
     if (missing(ts_df))
@@ -120,7 +120,7 @@ plot_time_series_df = function(ts_df, time_points = c(1:ncol(ts_df)),
     par(mar=c(5,5,5,5), oma=c(0,0,0,0))
     data_color = adjustcolor(data_color, alpha.f = 0.5)
     yl = range(ts_df, na.rm = TRUE) + c(-1,1)
-    for (j in 1:nrow(ts_df)) {
+    for (j in seq_len(nrow(ts_df))) {
         plot(time_points, ts_df[j,], ylim=yl, axes = FALSE, xlab="", ylab="",
             main="", col=data_color, type="l", pch=20,lwd=2)
         par(new=TRUE)
@@ -143,7 +143,7 @@ plot_time_series_df = function(ts_df, time_points = c(1:ncol(ts_df)),
 #' Each row is a time series comprised of the time series name which is also the
 #'  row name, and the time series values at each time point.
 #' @param time_points vector containing numeric values for the time points.
-#' Default: \code{c(1:ncol(time_series_df))}.
+#' Default: \code{seq_len(ncol(time_series_df))}.
 #' @param nb_clusters desired number of clusters
 #' @param em_iter_max maximum number of iterations for the
 #' expectation-maximization (EM) algorithm. Default: 1000.
@@ -177,7 +177,7 @@ plot_time_series_df = function(ts_df, time_points = c(1:ncol(ts_df)),
 #' @importFrom mvtnorm dmvnorm
 #' @import gss
 #' @import stats
-#' @importFrom utils read.table
+#' @importFrom utils read.table head
 #'
 #' @examples
 #' # Load the toy time series data provided with the TMixClust package
@@ -188,7 +188,7 @@ plot_time_series_df = function(ts_df, time_points = c(1:ncol(ts_df)),
 #'
 #' @export
 #'
-TMixClust = function(time_series_df, time_points = c(1:ncol(time_series_df)),
+TMixClust = function(time_series_df, time_points = seq_len(ncol(time_series_df)),
                     nb_clusters = 2, em_iter_max = 1000, mc_em_iter_max = 10,
                     em_ll_convergence = 0.001) {
     # input checking conditions
@@ -211,15 +211,15 @@ TMixClust = function(time_series_df, time_points = c(1:ncol(time_series_df)),
                 be positive.")
 
     # obtain starting configuration for EM with kmeans
-    print("Initializing ...")
+    message("Initializing ...")
     k_init = init_kmeans(time_series_df, nb_clusters, time_points)
 
     # perform EM to estimate the parameters of the model and cluster the time
     # series based on their posterior
-    print("Performing EM, this operation might take a few minutes ...")
+    message("Performing EM, this operation might take a few minutes ...")
     em_clust = do_EM(time_series_df, time_points, nb_clusters, k_init,
                     em_iter_max, mc_em_iter_max, em_ll_convergence)
-    print("Clustering done, results stored in a TMixClust object.")
+    message("Clustering done, results stored in a TMixClust object.")
 
     return(em_clust)
 }
@@ -296,7 +296,7 @@ generate_TMixClust_report = function(TMixClust_object, report_folder=paste(
     tryCatch( {
         col2rgb(data_color)
     } , error = function(e) {
-        print(e)
+        message(e)
         stop("Provided data color is not a valid color character.")
     })
 
@@ -310,12 +310,12 @@ generate_TMixClust_report = function(TMixClust_object, report_folder=paste(
     # create the necessary folders
     if (!dir.exists(report_folder)){
         tryCatch({
-            print("creating report folder")
+            message("creating report folder")
             dir.create(report_folder)
         }, warning = function(w) {
-            print(w)
+            message(w)
         }, error = function(e) {
-            print(e)
+            message(e)
             stop("There was a problem while creating the report folder.
                     Check if you have writing permission or the specified path
                     is correct.")
@@ -328,8 +328,8 @@ generate_TMixClust_report = function(TMixClust_object, report_folder=paste(
         dir.create(paste(report_folder,"estimated_curves/", sep=""))
     }
 
-    # retrieve the curve with Bayesian confidence intervals
-    for (k in 1:nb_clusters) {
+    # retrieve the curves with Bayesian confidence intervals
+    for (k in seq_len(nb_clusters)) {
         genes_k = which(TMixClust_object$em_cluster_assignment==k)
         if (length(genes_k)>0){
             if (!is.null(TMixClust_object$em_gss_obj_list[[k]]$fit_model)) {
@@ -350,30 +350,25 @@ generate_TMixClust_report = function(TMixClust_object, report_folder=paste(
                     ,".txt",sep=""), quote = FALSE, row.names = FALSE,
                     col.names = FALSE)
             }
+            # write the cluster assignments to file
+            write.table(TMixClust_object$ts_data[genes_k,],
+                        paste(report_folder,"clusters/cluster",k,".txt",sep=""),
+                        quote = FALSE)
+            write.table(row.names(TMixClust_object$ts_data[genes_k,]),
+                        paste(report_folder,"clusters/cluster",k
+                              ,"_names.txt",sep=""), quote = FALSE,
+                        row.names = FALSE, col.names = FALSE)
         }
     }
-
-    # write the cluster assignments to file and plot them
-    for (k in 1:nb_clusters) {
-        genes_k = which(TMixClust_object$em_cluster_assignment==k)
-        write.table(TMixClust_object$ts_data[genes_k,],
-                    paste(report_folder,"clusters/cluster",k,".txt",sep=""),
-                    quote = FALSE)
-        write.table(row.names(TMixClust_object$ts_data[genes_k,]),
-                    paste(report_folder,"clusters/cluster",k
-                            ,"_names.txt",sep=""), quote = FALSE,
-                    row.names = FALSE, col.names = FALSE)
-    }
+    # plot clusters time series
     plot_clusters(TMixClust_object$ts_data, TMixClust_object$ts_time_points,
-                    nb_clusters,
-                    TMixClust_object$em_cluster_assignment, report_folder,
-                    data_color, x_label, y_label) #, data_ticks)
+                    nb_clusters, TMixClust_object$em_cluster_assignment,
+                    report_folder, data_color, x_label, y_label)
 
     # calculate silhouette coefficients for each cluster and
-    # plot the distributions
+    # plot their distributions
     complete_ts = na.omit(TMixClust_object$ts_data)
-    not_omitted = which(rownames(TMixClust_object$ts_data) %in%
-                        rownames(complete_ts))
+    not_omitted = (rownames(TMixClust_object$ts_data)%in%rownames(complete_ts))
     m = data.matrix(complete_ts, rownames.force = FALSE)
     similarity_matrix = daisy(m)
     sil <- silhouette(TMixClust_object$em_cluster_assignment[not_omitted],
@@ -459,8 +454,7 @@ plot_silhouette = function(TMixClust_object, sim_metric="euclidean",
     # this works only for the time-series without missing values,
     # therefore we have to first remove the data points with missing values:
     complete_ts = na.omit(TMixClust_object$ts_data)
-    not_omitted = which(rownames(TMixClust_object$ts_data) %in%
-                        rownames(complete_ts))
+    not_omitted = (rownames(TMixClust_object$ts_data)%in%rownames(complete_ts))
     m = data.matrix(complete_ts, rownames.force = FALSE)
     # compute similarity matrix and silhouette coefficients
     similarity_matrix = daisy(m, metric = sim_metric)
@@ -490,7 +484,7 @@ plot_silhouette = function(TMixClust_object, sim_metric="euclidean",
 #' Each row is a time series comprised of the time series name which is also
 #' the row name, and the time series values at each time point.
 #' @param time_points vector containing numeric values for the time points.
-#' Default: \code{c(1:ncol(time_series_df))}.
+#' Default: \code{seq_len(ncol(time_series_df))}.
 #' @param nb_clusters desired number of clusters
 #' @param em_iter_max maximum number of iterations for the
 #' expectation-maximization (EM) algorithm. Default: 1000.
@@ -516,7 +510,7 @@ plot_silhouette = function(TMixClust_object, sim_metric="euclidean",
 #'                                    nb_clustering_runs = 4, nb_cores = 1)
 #'
 #' # Plot the time series from each cluster
-#' for (i in 1:3) {
+#' for (i in seq_len(3)) {
 #'     # Extract the time series in the current cluster and plot them
 #'     c_df=toy_data_df[which(best_clust_obj$em_cluster_assignment==i),]
 #'     plot_time_series_df(c_df, plot_title = paste("cluster",i))
@@ -535,7 +529,7 @@ plot_silhouette = function(TMixClust_object, sim_metric="euclidean",
 #' @export
 #'
 analyse_stability = function(time_series_df,
-                             time_points = c(1:ncol(time_series_df)),
+                             time_points = seq_len(ncol(time_series_df)),
                              nb_clusters = 2, em_iter_max = 1000,
                              mc_em_iter_max = 10, em_ll_convergence = 0.001,
                              nb_clustering_runs=3, nb_cores=1){
@@ -569,7 +563,7 @@ analyse_stability = function(time_series_df,
         TMixClust(time_series_df, time_points, nb_clusters,em_iter_max,
                     mc_em_iter_max, em_ll_convergence)
     }
-    cl_obj = bplapply(1:nb_clustering_runs, TMixClust_wrapper,
+    cl_obj = bplapply(seq_len(nb_clustering_runs), TMixClust_wrapper,
                         BPPARAM = MulticoreParam(workers = nb_cores))
 
     # find the solution with the highest likelihood
@@ -579,7 +573,7 @@ analyse_stability = function(time_series_df,
     # calculate the rand index between each TMixClust object and the object with
     # the highest likelihood
     rand_ind = NULL
-    for (i in 1:(nb_clustering_runs)) {
+    for (i in seq_len(nb_clustering_runs)) {
         g1 = cl_obj[[i]]$em_cluster_assignment
         g2 = cl_obj[[max_pos]]$em_cluster_assignment
         tab <- table(g1, g2)

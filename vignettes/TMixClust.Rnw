@@ -1,7 +1,6 @@
 %\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{Clustering time series gene expression data with TMixClust}
 
-
 <<init, eval=TRUE, results='hide', echo=FALSE, cache=FALSE>>=
 knitr::opts_chunk$set(cache=FALSE, echo=FALSE, eval=TRUE)
 @

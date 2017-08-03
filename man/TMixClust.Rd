@@ -4,7 +4,7 @@
 \alias{TMixClust}
 \title{Clusters the time series data in a given number of groups}
 \usage{
-TMixClust(time_series_df, time_points = c(1:ncol(time_series_df)),
+TMixClust(time_series_df, time_points = seq_len(ncol(time_series_df)),
   nb_clusters = 2, em_iter_max = 1000, mc_em_iter_max = 10,
   em_ll_convergence = 0.001)
 }
@@ -14,7 +14,7 @@ Each row is a time series comprised of the time series name which is also the
  row name, and the time series values at each time point.}
 
 \item{time_points}{vector containing numeric values for the time points.
-Default: \code{c(1:ncol(time_series_df))}.}
+Default: \code{seq_len(ncol(time_series_df))}.}
 
 \item{nb_clusters}{desired number of clusters}
 

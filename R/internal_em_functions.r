@@ -15,23 +15,22 @@
 ########################
 init_kmeans = function(data_table, K, time_points) {
     t = ncol(data_table)
-    gss_obj_list = NULL
-    # replace missing values by interpolaiton; only done for kmeans clustering.
+    gss_obj_list = vector("list", K)
+    # replace missing values by interpolation; only done for kmeans clustering.
     data_p = t(apply(data_table, MARGIN = 1, function(x) zoo::na.spline(c(x))))
     kmeans_clust = kmeans(data_p,K)$cluster
 
     # for each cluster, estimate the mean curve using gss ssanova function
-    for (k in 1:K) {
+    for (k in seq_len(K)) {
         cluster_genes = which(kmeans_clust == k)
         if (length(cluster_genes)>0) {
             cluster_data = data_table[cluster_genes,]
             gss_obj_list[[k]] = fit_ssanova(cluster_data, time_points)
-        } else {
-            gss_obj_list[[k]] = NULL
         }
     }
     return(list(kmeans_clust = kmeans_clust, gss_obj_list = gss_obj_list))
 }
+
 
 ##############################################
 # Internal function calc_prob: given a data point and a model,
@@ -48,13 +47,13 @@ init_kmeans = function(data_table, K, time_points) {
 ##############################################
 calc_prob=function(data_point, K, pi_k, gss_obj_list) {
     t = length(data_point)
-    components = NULL
-    for (k in 1:K) {
+    components = vector("double", K)
+    na_pos = is.na(data_point)
+    for (k in seq_len(K)) {
         if(!is.null(gss_obj_list[[k]]$fit_model)) {
             # replacing the missing values with the mean of the normal
             # distribution; does not influence the result
-            data_point[which(is.na(data_point))] =
-                gss_obj_list[[k]]$est_mu[which(is.na(data_point))]
+            data_point[na_pos] = gss_obj_list[[k]]$est_mu[na_pos]
             # compute the covariance matrix Sigma
             Sigma_mat = matrix(data = 10^(gss_obj_list[[k]]$fit_model$zeta)*
                                     (gss_obj_list[[k]]$fit_model$varht),
@@ -64,8 +63,6 @@ calc_prob=function(data_point, K, pi_k, gss_obj_list) {
 
             components[k] = pi_k[k] *
                         dmvnorm(data_point, gss_obj_list[[k]]$est_mu, Sigma_mat)
-        } else {
-            components[k] = 0
         }
     }
     log_likelihood = log(sum(components))
@@ -89,18 +86,18 @@ calc_prob=function(data_point, K, pi_k, gss_obj_list) {
 # output: log_like: log likelihood (proba of the data point given the model)
 ##############################################
 calc_ll=function(data_table, K, pi_k, gss_obj_list) {
-    vec_ll = NULL
-    for (i in 1:nrow(data_table)) {
-        components = NULL
+    vec_ll = vector("double", nrow(data_table))
+    for (i in seq_len(nrow(data_table))) {
+        components = vector("double", K)
         data_point = data_table[i,]
+        na_pos = is.na(data_point)
         t = length(data_point)
-        for (k in 1:K) {
+        for (k in seq_len(K)) {
             if (length(gss_obj_list)>=k) {
                 if(!is.null(gss_obj_list[[k]]$fit_model)) {
                     # replacing the missing values with the mean of the normal
                     # distribution; does not influence the result
-                    data_point[which(is.na(data_point))] =
-                        gss_obj_list[[k]]$est_mu[which(is.na(data_point))]
+                    data_point[na_pos] = gss_obj_list[[k]]$est_mu[na_pos]
                     # compute the covariance matrix Sigma
                     Sigma_mat = matrix(
                                 data = 10^(gss_obj_list[[k]]$fit_model$zeta)*
@@ -110,12 +107,7 @@ calc_ll=function(data_table, K, pi_k, gss_obj_list) {
                                         nrow = t, ncol = t)
                     components[k] = pi_k[k] *
                         dmvnorm(data_point, gss_obj_list[[k]]$est_mu, Sigma_mat)
-                } else {
-                    components[k] = 0
                 }
-            }
-            else {
-                components[k] = 0
             }
         }
         vec_ll[i] = log(sum(components))
@@ -136,24 +128,21 @@ calc_ll=function(data_table, K, pi_k, gss_obj_list) {
 #         cluster_assignment: vector with the assigned cluster for each point
 ##########################
 do_E_step = function(data_table, K, pi_k, gss_obj_list) {
-    cluster_assignment = NULL
+    cluster_assignment = vector("integer", K)
     N = nrow(data_table)
     mat_post = matrix(nrow = N, ncol = K)
-    for (i in 1:N) {
+    for (i in seq_len(N)) {
         data_point = data_table[i,]
+        na_pos = is.na(data_point)
         t = length(data_point)
-        t = length(data_point)
-        components = NULL
-        for (k in 1:K) {
+        components = vector("double", K)
+        for (k in seq_len(K)) {
             if (length(gss_obj_list)>=k) {
                 if(!is.null(gss_obj_list[[k]]$fit_model)) {
                     # replacing the missing values with the mean of the normal
                     # distribution; does not influence the result
-                    data_point[which(is.na(data_point))] =
-                            gss_obj_list[[k]]$est_mu[which(is.na(data_point))]
+                    data_point[na_pos] = gss_obj_list[[k]]$est_mu[na_pos]
                     # compute the covariance matrix Sigma
-                    #print("Matrix:")
-                    #print(gss_obj_list[[k]])
                     Sigma_mat = matrix(
                                 data = 10^(gss_obj_list[[k]]$fit_model$zeta)*
                                         (gss_obj_list[[k]]$fit_model$varht),
@@ -162,11 +151,7 @@ do_E_step = function(data_table, K, pi_k, gss_obj_list) {
                                             nrow = t, ncol = t)
                     components[k] = pi_k[k] *
                         dmvnorm(data_point, gss_obj_list[[k]]$est_mu, Sigma_mat)
-                } else {
-                    components[k] = 0
                 }
-            } else {
-                components[k] = 0
             }
         }
         mat_post[i,] = components/sum(components, na.rm = TRUE)
@@ -190,11 +175,11 @@ do_E_step = function(data_table, K, pi_k, gss_obj_list) {
 do_M_step = function(data_table, time_points, K,
                         t_gss_obj_list, thresh, mat_post){
     # M-step
-    new_gss_obj_list = NULL
-    # number of elements and of time-points
+    new_gss_obj_list = vector("list", K)
+    # number of elements and of time points
     N = nrow(data_table)
     t = ncol(data_table)
-    for (k in 1:K) {
+    for (k in seq_len(K)) {
         # use the rejection-controlled sampling to exclude low-probability
         # cluster members from
         # the gss smoothing spline estimation in order to obtain a more robust
@@ -203,22 +188,16 @@ do_M_step = function(data_table, time_points, K,
         bad_data_points = which(mat_post[,k]<thresh)
         # with probability 1-p/thresh, assign posterior proba 0 to outliers
         reassignment = as.vector(sapply(mat_post[bad_data_points,k],
-                                        function(x, p = thresh){
-                                            sample(c(1,0),1,
-                                                    prob=c(x/p,(1-x/p)))}))
-        cluster_i = c(good_data_points,
-                        bad_data_points[which(reassignment == 1)])
+                                function(x, p = thresh){
+                                    sample(c(1,0),1,prob=c(x/p,(1-x/p)))}))
+        cluster_i = c(good_data_points, bad_data_points[reassignment == 1])
         if (length(cluster_i)>0){
             # obtain the weights for the penalized log-likelihood
-            t_wei = matrix(nrow = t, ncol = length(cluster_i))
-            for(i in 1:length(cluster_i)){
-                t_wei[,i] = rep(mat_post[cluster_i[i],k],t)
-            }
+            t_wei = t(as.matrix(mat_post[c(cluster_i),k]) %*% matrix(1, nrow = 1, ncol = t))
+
             # maximize the penalized log-likelihood
             new_gss_obj_list[[k]] = fit_ssanova(data_table[cluster_i,],
                                                     time_points, t_wei)
-        } else {
-            new_gss_obj_list[[k]] = NULL
         }
     }
     return(new_gss_obj_list)
@@ -232,10 +211,8 @@ do_M_step = function(data_table, time_points, K,
 # output: pi_k
 #########################
 compute_pi_k = function(mat_post, N, K) {
-    pi_k = NULL
-    for (k in 1:K) {
-        pi_k[k] = sum(mat_post[,k])/N
-    }
+    pi_k = vector("double", K)
+    pi_k = colSums(mat_post, na.rm = TRUE)/N
     return(pi_k)
 }
 
@@ -299,7 +276,7 @@ do_EM = function(data_table, time_points, K, start_model, em_iter_max,
             if (ll_dif >= - em_ll_convergence || decrease_iter > mc_em_iter_max)
             {
                 subsample = FALSE
-                print("log likelihood is increasing")
+                message("log likelihood is increasing")
             }
         }
         if(ll_dif >= - em_ll_convergence) {

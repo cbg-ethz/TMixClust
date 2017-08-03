@@ -39,9 +39,9 @@ plot_clusters = function(data_table, time_points, nb_clusters, final_clust,
             paste(report_folder,"clusters/cluster_plots.pdf",sep=""),
             useDingbats=FALSE)
     par(mfcol=c(1,nb_clusters),mar=c(5,5,5,5), oma=c(0,0,0,0))
-    for (k in 1:nb_clusters) {
+    for (k in seq_len(nb_clusters)) {
         genes_k = which(final_clust==k)
-        for (j in 1:length(genes_k)) {
+        for (j in seq_len(length(genes_k))) {
             plot(time_points, data_table[genes_k[j],], ylim=yl,
                     axes = FALSE, xlab="", ylab="", main="",
                     col=data_color, type="l", pch=20,lwd=2)
@@ -68,7 +68,7 @@ plot_clusters = function(data_table, time_points, nb_clusters, final_clust,
                     col="black", type="l", lwd=2)
             par(new=FALSE)
             # add axes to plot
-            axis(side = 1, cex.axis=2.5,cex.lab=2.5) #at = data_ticks,
+            axis(side = 1, cex.axis=2.5,cex.lab=2.5)
             axis(side = 2,cex.axis=2,cex.lab=2)
             title(main=paste("cluster ", k, sep=""), xlab = x_label,
                     ylab = y_label, cex.lab=2, cex.main=2)

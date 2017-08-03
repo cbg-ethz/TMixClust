@@ -17,7 +17,6 @@
 #' @author Monica Golumbeanu, \email{monica.golumbeanu@bsse.ethz.ch}
 #'
 #' @docType package
-#' @import BiocStyle
 #' @name TMixClust-package
 #'
 #' @aliases TMixClust-package
