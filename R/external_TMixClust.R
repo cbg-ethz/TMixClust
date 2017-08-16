@@ -188,7 +188,8 @@ plot_time_series_df = function(ts_df, time_points = seq_len(ncol(ts_df)),
 #'
 #' @export
 #'
-TMixClust = function(time_series_df, time_points = seq_len(ncol(time_series_df)),
+TMixClust = function(time_series_df,
+                    time_points = seq_len(ncol(time_series_df)),
                     nb_clusters = 2, em_iter_max = 1000, mc_em_iter_max = 10,
                     em_ll_convergence = 0.001) {
     # input checking conditions

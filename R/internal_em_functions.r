@@ -193,7 +193,8 @@ do_M_step = function(data_table, time_points, K,
         cluster_i = c(good_data_points, bad_data_points[reassignment == 1])
         if (length(cluster_i)>0){
             # obtain the weights for the penalized log-likelihood
-            t_wei = t(as.matrix(mat_post[c(cluster_i),k]) %*% matrix(1, nrow = 1, ncol = t))
+            t_wei = t(as.matrix(mat_post[c(cluster_i),k]) %*%
+                          matrix(1, nrow = 1, ncol = t))
 
             # maximize the penalized log-likelihood
             new_gss_obj_list[[k]] = fit_ssanova(data_table[cluster_i,],
