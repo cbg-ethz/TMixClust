@@ -1,7 +1,7 @@
 Package: TMixClust
 Type: Package
 Title: Time Series Clustering of Gene Expression with Gaussian Mixed-Effects Models and Smoothing Splines
-Version: 0.99.4
+Version: 1.0.0
 Year: 2017
 Date: 2017-06-04
 Author: Monica Golumbeanu <monica.golumbeanu@bsse.ethz.ch>
