@@ -4,11 +4,12 @@
 <<init, eval=TRUE, results='hide', echo=FALSE, cache=FALSE>>=
 knitr::opts_chunk$set(cache=FALSE, echo=FALSE, eval=TRUE)
 @
-
 \documentclass{article}
+
 <<style-knitr, results="asis">>=
-BiocStyle::latex2()
+BiocStyle::latex()
 @
+
 
 \bioctitle[Clustering time series gene expression data with TMixClust]
 {Clustering time series gene expression data with TMixClust}
